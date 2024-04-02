@@ -15,10 +15,10 @@ class LenraTableRow extends TableRow {
     required EdgeInsetsGeometry padding,
     required LenraTableThemeData theme,
   }) {
-    List<Widget> res = List.from(children!);
+    List<Widget> res = List.from(children);
 
     // Wrap in LenraTableCell
-    for (var i = 0; i < children!.length; i++) {
+    for (var i = 0; i < children.length; i++) {
       res[i] = LenraTableCell(
         child: Padding(
           padding: padding,
