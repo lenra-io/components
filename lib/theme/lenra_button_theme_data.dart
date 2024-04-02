@@ -157,8 +157,9 @@ class LenraButtonThemeData {
       foregroundColor: foregroundColor.resolve(type),
       backgroundColor: backgroundColor.resolve(type),
       side: side.resolve(type),
-      padding: MaterialStateProperty.all(EdgeInsets.zero),
-      minimumSize: MaterialStateProperty.all(Size.zero),
+      shape: const MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4)))),
+      padding: const MaterialStatePropertyAll(EdgeInsets.zero),
+      minimumSize: const MaterialStatePropertyAll(Size.zero),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
