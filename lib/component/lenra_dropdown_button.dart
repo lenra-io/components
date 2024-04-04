@@ -96,7 +96,7 @@ class _LenraDropdownButtonState extends State<LenraDropdownButton> {
     } else {
       _overlayEntry ??= _createOverlayEntry();
 
-      Overlay.of(context)!.insert(_overlayEntry!);
+      Overlay.of(context).insert(_overlayEntry!);
       showOverlay = !showOverlay;
     }
   }

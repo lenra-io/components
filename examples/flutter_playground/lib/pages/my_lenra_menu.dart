@@ -54,16 +54,12 @@ class _MyLenraMenuState extends State<MyLenraMenu> {
               LenraMenuItem(
                 text: "Coffee",
                 isSelected: selectedItems[0],
-                onPressed: () => {
-                  setState(() => {selectedItems[0] = !selectedItems[0]})
-                },
+                onPressed: () => {setState(() => selectedItems[0] = !selectedItems[0])},
               ),
               LenraMenuItem(
                 text: "Water",
                 isSelected: selectedItems[1],
-                onPressed: () => {
-                  setState(() => {selectedItems[1] = !selectedItems[1]})
-                },
+                onPressed: () => {setState(() => selectedItems[1] = !selectedItems[1])},
               ),
             ],
           ),

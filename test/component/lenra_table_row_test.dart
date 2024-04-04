@@ -19,7 +19,7 @@ void main() {
               padding: const EdgeInsets.symmetric(vertical: 1 * 8.0, horizontal: 2 * 8.0),
               theme: LenraTableThemeData(lenraThemeData: LenraThemeData()),
             )
-            .children!
+            .children
             .first is LenraTableCell,
         true);
   });
