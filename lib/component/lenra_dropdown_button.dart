@@ -86,51 +86,40 @@ class LenraDropdownButton extends StatefulWidget {
 class _LenraDropdownButtonState extends State<LenraDropdownButton> {
   // [_layerLink] is used to make sure the child of [LenraDropdownButton] is correctly following the [LenraDropdownButton] when scrolling.
   final LayerLink _layerLink = LayerLink();
-  OverlayEntry? _overlayEntry;
+  final OverlayPortalController _overlayPortalController = OverlayPortalController();
+  final GlobalKey _buttonKey = GlobalKey();
+  final GlobalKey _overlayKey = GlobalKey();
   bool showOverlay = false;
-
-  toggleOverlay(BuildContext context) async {
-    if (showOverlay) {
-      _overlayEntry?.remove();
-      showOverlay = !showOverlay;
-    } else {
-      _overlayEntry ??= _createOverlayEntry();
-
-      Overlay.of(context).insert(_overlayEntry!);
-      showOverlay = !showOverlay;
-    }
-  }
-
-  OverlayEntry _createOverlayEntry() {
-    RenderBox renderBox = context.findRenderObject() as RenderBox;
-
-    return OverlayEntryFactory.withTheme(
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => toggleOverlay(context),
-        child: _Dropdown(
-          renderBox: renderBox,
-          child: widget.child,
-          layerLink: _layerLink,
-        ),
-      ),
-      context: context,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
       link: _layerLink,
-      child: LenraButton(
-        text: widget.text,
-        onPressed: () {
-          toggleOverlay(context);
+      child: OverlayPortal(
+        controller: _overlayPortalController,
+        overlayChildBuilder: (context) {
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => _overlayPortalController.toggle(),
+            child: _Dropdown(
+              key: _overlayKey,
+              child: widget.child,
+              layerLink: _layerLink,
+              buttonKey: _buttonKey,
+            ),
+          );
         },
-        disabled: widget.disabled,
-        size: widget.size,
-        type: widget.type,
-        rightIcon: widget.icon,
+        child: LenraButton(
+          key: _buttonKey,
+          text: widget.text,
+          onPressed: () {
+            _overlayPortalController.toggle();
+          },
+          disabled: widget.disabled,
+          size: widget.size,
+          type: widget.type,
+          rightIcon: widget.icon,
+        ),
       ),
     );
   }
@@ -139,12 +128,12 @@ class _LenraDropdownButtonState extends State<LenraDropdownButton> {
 class _Dropdown extends StatefulWidget {
   final Widget child;
   final LayerLink layerLink;
-  final RenderBox renderBox;
+  final GlobalKey buttonKey;
 
   const _Dropdown({
     required this.child,
     required this.layerLink,
-    required this.renderBox,
+    required this.buttonKey,
     Key? key,
   }) : super(key: key);
 
@@ -154,7 +143,6 @@ class _Dropdown extends StatefulWidget {
 
 class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
   // TickerProviderStateMixin is used to correctly execute the fade animation of the menu
-  GlobalKey overlayKey = GlobalKey();
   Offset? overlayOffset;
   bool verticalScroll = false;
   bool horizontalScroll = false;
@@ -173,7 +161,9 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (overlayOffset == null) {
-        var overlay = overlayKey.currentContext?.findRenderObject();
+        // How to get the overlay context ????????
+        var overlay = context.findRenderObject();
+
 
         if (overlay != null) {
           _updateOverlayOffset(overlay);
@@ -183,11 +173,12 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
   }
 
   void _updateOverlayOffset(RenderObject overlay) {
-    var overlaySize = (overlay as RenderBox).size;
-    buttonSize = widget.renderBox.size;
-    var buttonOffset = widget.renderBox.localToGlobal(Offset.zero);
-    var screenSize = MediaQuery.of(context).size;
+    Size overlaySize = (overlay as RenderBox).size;
+    buttonSize = widget.layerLink.leaderSize!;
+    var buttonOffset = (widget.buttonKey.currentContext!.findRenderObject() as RenderBox).localToGlobal(Offset.zero);
+    Size screenSize = MediaQuery.of(context).size;
 
+    // Here we check if the overlay will be overflowing any of the screen boundaries
     bool overflowRight = buttonOffset.dx + overlaySize.width >= screenSize.width;
     bool overflowLeft = buttonOffset.dx + buttonSize.width - overlaySize.width <= 0;
     bool overflowBottom = buttonOffset.dy + buttonSize.height + overlaySize.height >= screenSize.height;
@@ -232,15 +223,13 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
   }
 
   Widget _buildContextualMenu() {
-    Widget child = _buildOverlay();
-    child = _addMinWidth(child);
+    Widget child = _addMinWidth(widget.child);
     child = _addAlignment(child);
     return _addOffsetAndLink(child);
   }
 
   Widget _buildFullscreenMenu() {
-    Widget child = _buildOverlay();
-    child = _forceTakeWidth(child);
+    Widget child = _forceTakeWidth(widget.child);
     child = _addAlignment(child);
 
     if (verticalScroll) child = _addVerticalScroll(child);
@@ -266,13 +255,6 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
     return Align(alignment: Alignment.topLeft, child: child);
   }
 
-  Widget _buildOverlay() {
-    return Material(
-      key: overlayKey,
-      child: widget.child,
-    );
-  }
-
   Widget _addAnimation(Widget child) {
     return FadeTransition(
       opacity: CurvedAnimation(
@@ -285,7 +267,8 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
 
   Widget _addOffsetAndLink(Widget child) {
     return CompositedTransformFollower(
-      offset: overlayOffset ?? Offset(0, widget.renderBox.size.height),
+      offset:
+          overlayOffset ?? Offset(0, (widget.buttonKey.currentContext!.findRenderObject() as RenderBox).size.height),
       link: widget.layerLink,
       child: child,
     );
