@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lenra_components/component/lenra_button.dart';
 import 'package:lenra_components/theme/lenra_theme_data.dart';
-import 'package:lenra_components/utils/overlay_entry_factory.dart';
 
 /// A dropdown button showing a dropdown when clicked.
 ///
