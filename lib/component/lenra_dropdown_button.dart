@@ -88,27 +88,25 @@ class _LenraDropdownButtonState extends State<LenraDropdownButton> {
   final LayerLink _layerLink = LayerLink();
   final OverlayPortalController _overlayPortalController = OverlayPortalController();
   final GlobalKey _buttonKey = GlobalKey();
-  final GlobalKey _overlayKey = GlobalKey();
   bool showOverlay = false;
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: OverlayPortal(
-        controller: _overlayPortalController,
-        overlayChildBuilder: (context) {
-          return GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: () => _overlayPortalController.toggle(),
-            child: _Dropdown(
-              key: _overlayKey,
-              child: widget.child,
-              layerLink: _layerLink,
-              buttonKey: _buttonKey,
-            ),
-          );
-        },
+    return OverlayPortal(
+      controller: _overlayPortalController,
+      overlayChildBuilder: (context) {
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => _overlayPortalController.toggle(),
+          child: _Dropdown(
+            child: widget.child,
+            layerLink: _layerLink,
+            buttonKey: _buttonKey,
+          ),
+        );
+      },
+      child: CompositedTransformTarget(
+        link: _layerLink,
         child: LenraButton(
           key: _buttonKey,
           text: widget.text,
@@ -143,6 +141,7 @@ class _Dropdown extends StatefulWidget {
 
 class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
   // TickerProviderStateMixin is used to correctly execute the fade animation of the menu
+  GlobalKey overlayKey = GlobalKey();
   Offset? overlayOffset;
   bool verticalScroll = false;
   bool horizontalScroll = false;
@@ -161,9 +160,7 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (overlayOffset == null) {
-        // How to get the overlay context ????????
-        var overlay = context.findRenderObject();
-
+        var overlay = overlayKey.currentContext?.findRenderObject();
 
         if (overlay != null) {
           _updateOverlayOffset(overlay);
@@ -240,14 +237,14 @@ class _DropdownState extends State<_Dropdown> with TickerProviderStateMixin {
   Widget _forceTakeWidth(Widget child) {
     return SizedBox(
       width: double.infinity,
-      child: child,
+      child: Container(key: overlayKey, child: child),
     );
   }
 
   Widget _addMinWidth(Widget child) {
     return ConstrainedBox(
       constraints: BoxConstraints(minWidth: buttonSize.width),
-      child: child,
+      child: Container(key: overlayKey, child: child),
     );
   }
 
